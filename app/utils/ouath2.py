@@ -62,7 +62,7 @@ async def get_current_user(
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
-        
+
     except Exception:
         raise credentials_exception
     print(token_data.username)
