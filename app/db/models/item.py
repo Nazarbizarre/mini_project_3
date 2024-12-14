@@ -16,8 +16,3 @@ class Item(Base):
     image: Mapped[bytes]
     author: Mapped[str]
     author_id: Mapped[int]
-
-
-
-
-#sigma, skibidi, rizz, goofy, bingus, floppa, chad, sus, yeet, cringe, bazinga, drip, brokey, slay, uwu, oof, pog, zoomer, vibes, sussy, baka, noob, pro, slatt, flex, gucci, vibecheck, dripcheck, wombo, skrtt, plop, swaggy, dab, lit, savage

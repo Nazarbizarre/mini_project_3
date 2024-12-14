@@ -11,8 +11,6 @@ from ..utils import authenticate_user, create_access_token, ACCESS_TOKEN_EXPIRE_
 from ..db import AsyncDB, User
 
 
-
-
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
 
@@ -21,7 +19,7 @@ async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: Annotated[Session, Depends(AsyncDB.get_session)],
 ) -> Token:
-    user = authenticate_user(form_data.username, form_data.password, session)
+    user = await authenticate_user(form_data.username, form_data.password, session)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -29,7 +27,7 @@ async def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
+    access_token = await create_access_token(
         data={"sub": user.name}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
@@ -39,9 +37,12 @@ async def login_for_access_token(
 async def register_user(
     data: UserModel, session: Annotated[Session, Depends(AsyncDB.get_session)]
 ):
-    user = session.scalar(select(User).where(User.email == data.email))
+    user = await session.scalar(select(User).where(User.email == data.email))
     if user:
         raise HTTPException(status_code=400, detail="Email already registered")
+    user = await session.scalar(select(User).where(User.name == data.name))
+    if user:
+        raise HTTPException(status_code=400, detail="Nickname already registered")
     user = User(**data.model_dump())
     session.add(user)
     return user

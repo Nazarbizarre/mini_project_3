@@ -17,26 +17,27 @@ from ..schemas.token import TokenData
 
 load_dotenv()
 
-OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl="api/auth/token")
+OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl="auth/token")
 SECRET_KEY = getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-def authenticate_user(
+async def authenticate_user(
     username: str,
     password: str,
     session: Annotated[Session, Depends(AsyncDB.get_session)],
 ):
-    user = session.scalar(select(User).where(User.name == username))
+    user = await session.scalar(select(User).where(User.name == username))
     if not user:
         return False
-    if not verify_password(password, user.password):
+    print(password, user.password)
+    if not await verify_password(password, user.password):
         return False
     return user
 
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+async def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -66,7 +67,7 @@ async def get_current_user(
     except Exception:
         raise credentials_exception
     print(token_data.username)
-    user = session.scalar(select(User).where(User.name == token_data.username))
+    user = await session.scalar(select(User).where(User.name == token_data.username))
     if user is None:
         raise credentials_exception
     return user

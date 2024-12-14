@@ -2,6 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, mapped_column, Mapped
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 
 class PublishedMixin:
@@ -9,30 +10,32 @@ class PublishedMixin:
 
 
 class Base(DeclarativeBase):
-    id: Mapped[int] = mapped_column(primary_key=True,autoincrement=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
 
 class AsyncDB:
-    ENGINE = create_engine("sqlite:///users.db")
-    SESSION = sessionmaker(bind=ENGINE)
+    ENGINE = create_async_engine("sqlite+aiosqlite:///users.db")
+    SESSION = sessionmaker(bind=ENGINE, class_=AsyncSession)
 
     @classmethod
-    def up(cls):
-        Base.metadata.create_all(cls.ENGINE)
+    async def up(cls):
+        async with cls.ENGINE.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
     @classmethod
-    def down(cls):
-        Base.metadata.drop_all(cls.ENGINE)
+    async def down(cls):
+        async with cls.ENGINE.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
 
     @classmethod
-    def migrate(cls):
-        Base.metadata.drop_all(cls.ENGINE)
-        Base.metadata.create_all(cls.ENGINE)
-
+    async def migrate(cls):
+        async with cls.ENGINE.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+            await conn.run_sync(Base.metadata.create_all)
 
     @classmethod
-    def get_session(cls):
-        with cls.SESSION.begin() as session:
+    async def get_session(cls):
+        async with cls.SESSION.begin() as session:
             yield session
 
 
