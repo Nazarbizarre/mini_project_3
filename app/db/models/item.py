@@ -13,6 +13,5 @@ class Item(Base):
     description: Mapped[str]
     published_at: Mapped[datetime]
     category: Mapped[str]
-    image: Mapped[bytes]
     author: Mapped[str]
     author_id: Mapped[int]
