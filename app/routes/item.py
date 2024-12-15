@@ -19,11 +19,14 @@ def read_root():
 
 @items_router.post("/create", status_code=status.HTTP_201_CREATED)
 async def create_item(
-    data: Advertisement,
+    data: Annotated[Advertisement, Form(media_type="multipart/form-data")],
     current_user: Annotated[User, Depends(get_current_user)],
     session=Depends(AsyncDB.get_session),
 ):
-    item = Item(**data.model_dump(), author_id=current_user.id, author = current_user.name)
+    photo_bytes = await data.photo.read()
+    data_dict = data.model_dump() 
+    data_dict.pop('photo', None)  
+    item = Item(**data_dict, author_id=current_user.id, author=current_user.name, photo=photo_bytes)
     session.add(item)
     return "Item Created"
 

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Optional
-from datetime import datetime, timedelta
+from typing import Optional, Annotated
+from datetime import datetime
 from fastapi import UploadFile, File
 
 
@@ -14,23 +14,22 @@ class Advertisement(BaseModel):
     price: float = Field(..., ge=0, description="Price of the product or service")
     category: str = Field(..., min_length=3, max_length=30, description="Category of the product")
     published_at: datetime = Field(default_factory=datetime.now, description="Date of the creation")
-    
+    photo: Annotated[UploadFile, File(...)] = None
 
-    @field_validator("published_at")
+    @field_validator("created_at")
     @classmethod
-    def check_date(cls, value):
-        if value.date() <= datetime.now().date():
-            raise ValueError("Date cannot be in the past or present")
+    def check_date(cls,value):
+        if value < datetime.now():
+            raise ValueError("Date cannot be in the past")
         return value
-
     
     
     @field_validator("price")
     @classmethod
     def check_price(cls,value):
-      if value < 0:
-          raise ValueError("The price must be higher then 0")
-      return value
+        if value < 0:
+            raise ValueError("The price must be higher then 0")
+        return value
     
 
 
