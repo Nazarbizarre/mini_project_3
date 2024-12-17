@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routes import auth_router, items_router, filters_router
+from .routes import auth_router, items_router, filters_router, chat
 
 
 app = FastAPI()
